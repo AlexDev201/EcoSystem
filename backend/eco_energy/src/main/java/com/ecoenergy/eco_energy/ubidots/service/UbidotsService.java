@@ -15,7 +15,7 @@ import java.util.Map;
 public class UbidotsService {
     private final UbidotsClient ubidotsClient;
 
-    protected void sendDataSensor(String deviceId, double voltage, double current,
+    public  void sendDataReading(String deviceId, double voltage, double current,
                                   double power, double temperature){
         //Este mapeo convierte los atributos en objetos clave-valor
         //los valores pueden tomar el atributo que el contexto los requiera
