@@ -3,6 +3,7 @@ package com.ecoenergy.eco_energy.device.service;
 import com.ecoenergy.eco_energy.device.model.Device;
 import com.ecoenergy.eco_energy.device.repository.DeviceRepository;
 import com.ecoenergy.eco_energy.ubidots.service.UbidotsService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class DeviceService {
     private final DeviceRepository deviceRepository;
     private final UbidotsService ubidotsService;
 
-    // CRUD básico
+    // Operaciones CRUD
     public Device createDevice(Device device) {
         device.setCreatedAt(LocalDateTime.now());
         return deviceRepository.save(device);
@@ -31,6 +32,9 @@ public class DeviceService {
     }
 
     public Device updateDevice(Device device) {
+        if(!deviceRepository.existsById(device.getId())){
+            throw new EntityNotFoundException("Device not found with id" + device.getId());
+        }
         device.setUpdatedAt(LocalDateTime.now());
         return deviceRepository.save(device);
     }
@@ -53,9 +57,9 @@ public class DeviceService {
     public void sendReadingToUbidots(UUID deviceId, double voltage, double current,
                                      double power, double temperature) {
         deviceRepository.findById(deviceId)
-                .ifPresent(device ->
-                        ubidotsService.sendDataReading(device.getUbidotsLabel(),
-                                voltage, current, power, temperature)
+                .ifPresentOrElse(
+                        device -> ubidotsService.sendDataReading(device.getUbidotsLabel(), voltage, current, power, temperature),
+                        () -> log.warn("Device not found with ID: {}", deviceId)
                 );
     }
 }
