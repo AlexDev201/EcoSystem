@@ -1,7 +1,7 @@
 package com.ecoenergy.eco_energy.ubidots.service;
 
 import com.ecoenergy.eco_energy.ubidots.client.UbidotsClient;
-import com.ecoenergy.eco_energy.ubidots.dto.UbidotsDevice;
+import com.ecoenergy.eco_energy.ubidots.dto.UbidotsDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class UbidotsService {
                 );
     }
     //Con este metodo podemos obtener informacion de un dispositivo desde Ubidots.
-    public Mono<UbidotsDevice> getDeviceInfo(String deviceLabel) {
+    public Mono<UbidotsDTO> getDeviceInfo(String deviceLabel) {
         return ubidotsClient.getDevice(deviceLabel)
                 .doOnSuccess(device -> log.info("Retrieved device: {}", device.getLabel()))
                 .doOnError(error -> log.error("Failed to get device: {}", deviceLabel, error));

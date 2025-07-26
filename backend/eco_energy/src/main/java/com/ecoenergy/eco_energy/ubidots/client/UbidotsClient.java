@@ -1,6 +1,6 @@
 package com.ecoenergy.eco_energy.ubidots.client;
 
-import com.ecoenergy.eco_energy.ubidots.dto.UbidotsDevice;
+import com.ecoenergy.eco_energy.ubidots.dto.UbidotsDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,11 +24,11 @@ public class UbidotsClient {
                 .doOnSuccess(response -> log.info("Data sent to Ubidots: {}", deviceLabel))
                 .doOnError(error -> log.error("Error sending to Ubidots: {}", error.getMessage()));
     }
-    public Mono<UbidotsDevice> getDevice(String deviceLabel){
+    public Mono<UbidotsDTO> getDevice(String deviceLabel){
         return ubidotsWebClient
                 .get()
                 .uri("/devices/{deviceLabel}", deviceLabel)
                 .retrieve()
-                .bodyToMono(UbidotsDevice.class);
+                .bodyToMono(UbidotsDTO.class);
     }
 }

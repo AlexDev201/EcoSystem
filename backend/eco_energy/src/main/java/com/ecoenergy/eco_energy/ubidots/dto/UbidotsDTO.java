@@ -7,7 +7,7 @@ import java.util.Map;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UbidotsDevice {
+public class UbidotsDTO {
     private String id;
     private String label;
     private String name;
