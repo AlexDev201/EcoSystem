@@ -52,4 +52,5 @@ public class UbidotsService {
         ubidotsClient.sendDataDevice(deviceId + "_anomalies", payload)
                 .subscribe();
     }
+
 }
