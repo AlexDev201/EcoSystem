@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -30,5 +31,19 @@ public class UbidotsClient {
                 .uri("/devices/{deviceLabel}", deviceLabel)
                 .retrieve()
                 .bodyToMono(UbidotsDTO.class);
+    }
+
+    public Mono<List<Map<String, Object>>> getDeviceReadings(String deviceLabel, String variableLabel,
+    long startTime, long endTime) {
+        return ubidotsWebClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/devices/{deviceLabel}/{variableLabel}/values")
+                        .queryParam("start", startTime)
+                        .queryParam("end", endTime)
+                        .build(deviceLabel, variableLabel))
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> (List<Map<String, Object>>) response.get("results"));
     }
 }
