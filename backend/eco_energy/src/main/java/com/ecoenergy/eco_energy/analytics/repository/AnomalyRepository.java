@@ -12,7 +12,10 @@ public interface AnomalyRepository extends JpaRepository<Anomaly, UUID> {
     List<Anomaly> findByDeviceIdAndAnomalyType(UUID deviceId, String anomalyType);
     List<Anomaly> findByAnomalyType(String anomalyType);
     List<Anomaly> findByDetectedAtBetween(LocalDateTime start, LocalDateTime end);
-    List<Anomaly> findByDeviceAndAnomalyTypeAndDetectedAtBetween(
+    List<Anomaly> findByDeviceIdAndAnomalyTypeAndDetectedAtBetween(
             UUID deviceId, String anomalyType, LocalDateTime start, LocalDateTime end
     );
+    long countByDeviceIdAndDetectedAtBetween(UUID deviceId, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    List<Anomaly> findByDeviceIdAndDetectedAtBetween(UUID deviceId, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

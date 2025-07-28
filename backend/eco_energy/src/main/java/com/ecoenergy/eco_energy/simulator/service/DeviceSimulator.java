@@ -1,7 +1,9 @@
 package com.ecoenergy.eco_energy.simulator.service;
 
+import com.ecoenergy.eco_energy.analytics.dto.Reading;
 import com.ecoenergy.eco_energy.device.model.Device;
 import com.ecoenergy.eco_energy.device.service.DeviceService;
+import com.ecoenergy.eco_energy.notification.websocket.EnergyDataHandler;
 import com.ecoenergy.eco_energy.ubidots.service.UbidotsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Random;
 
@@ -20,6 +23,7 @@ import java.util.Random;
 public class DeviceSimulator{
     private final DeviceService deviceService;
     private final UbidotsService ubidotsService;
+    private final EnergyDataHandler energyDataHandler;
     private  final Random random = new Random();
 
     @Scheduled(fixedRate = 5000)//Cada 5 segundos
@@ -46,6 +50,17 @@ public class DeviceSimulator{
                     device.getUbidotsLabel(),
                     voltage, current, power, temperature
             );
+
+            // Enviar por WebSocket a clientes suscritos
+            Reading reading = new Reading();
+            reading.setDeviceId(device.getUbidotsLabel());
+            reading.setVoltage(voltage);
+            reading.setCurrent(current);
+            reading.setPower(power);
+            reading.setTemperature(temperature);
+            reading.setTimestamp(LocalDateTime.now());
+
+            energyDataHandler.sendEnergyData(device.getUbidotsLabel(), reading);
 
         } catch (Exception e) {
             log.error("Error simulating reading for device: {}", device.getName(), e);
