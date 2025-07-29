@@ -85,7 +85,7 @@ export function getDeviceKpis(deviceId :string, startDate: string, endDate: stri
 
 export function exportToCsv(deviceId: string, startDate: string, endDate: string): Promise<string> {
     return axios.get(`http://localhost:8000/api/reports/export/csv/`, {
-        params: { from: startDate, to : endDate },
+        params: { deviceId, from: startDate, to : endDate },
         responseType: 'blob'
     })
         .then(response => {
