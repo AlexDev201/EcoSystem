@@ -1,11 +1,17 @@
-//Interfaz deL Device
+//Interfaz del Device
 export interface Device{
-    id : string;
+    id?: string;
     name: string;
-    type:string;
-    location: string;
-    status:DeviceStatus;
-    ubidotosLabel: string;
+    type: string;
+    location?: string;
+    status?: DeviceStatus;
+    ubidotsLabel?: string;
+    minVoltage?: number;
+    maxVoltage?: number;
+    maxCurrent?: number;
+    maxTemperature?: number;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export enum DeviceStatus {
@@ -16,7 +22,7 @@ export enum DeviceStatus {
 
 //Interfaz del Reading
 
-export interface Readings{
+export interface Reading{
     deviceId : string;
     voltage : number;
     current: number;
@@ -41,6 +47,7 @@ export interface AlertNotification {
   message: string;
   data: any;
   timestamp: string;
+  read: boolean;
 }
 
 //Api Response Type
@@ -61,4 +68,28 @@ export interface WebSocketMessage{
   timestamp?: string;
 }
 
-type WebSocketEventType = 'energy_data' | 'alert' | 'connection';
+
+export interface DailyReport {
+  deviceId: string;
+  date: string; // LocalDate as string
+  totalConsumption: number;
+  avgVoltage: number;
+  avgCurrent: number;
+  anomalyCount: number;
+}
+
+export interface AnomalyReport {
+  anomalies: Anomaly[];
+  anomaliesByType: Record<string, number>;
+  reportPeriod: string; 
+  totalCount: number;
+}
+
+export interface DeviceKpis {
+  deviceId: string;
+  currentPower: number;
+  avgPower: number;
+  efficiency: number; 
+  uptimeHours: number;
+  status: string;
+}

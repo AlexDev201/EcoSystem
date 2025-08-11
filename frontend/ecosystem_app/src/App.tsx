@@ -1,18 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Header } from "./components/common/Header"
+import { Sidebar } from "./components/common/Sidebar"
+import { DashboardMain } from "./components/dashboard/DashboardMain"
+import { DeviceList } from "./components/devices/DeviceList"
+import { ReportDashboard } from "./components/reports/ReportDashboard"
+import { webSocketService } from "./services/websocket"
+import "../src/App.css"
 
-function App() {
-  const [count, setCount] = useState(0)
+export function App() {
+  const [isSidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    webSocketService.connect()
+
+    return () => {
+      webSocketService.disconnect()
+    }
+  }, [])
 
   return (
-    <>
-     <h1 className="text-3xl font-bold underline">
-    Hello world, this is my frist app!
-  </h1>
-    </>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50">
+        <Header onToggleSidebar={() => setSidebarOpen(true)} />
+        <div className="flex">
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+          <main className="flex-1 p-6">
+            <Routes>
+              <Route path="/" element={<DashboardMain />} />
+              <Route path="/devices" element={<DeviceList />} />
+              <Route path="/reports" element={<ReportDashboard />} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+    </BrowserRouter>
   )
 }
-
-export default App

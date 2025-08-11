@@ -1,20 +1,20 @@
 import axios from 'axios';
-import type { Device } from './types';
-import type {Anomaly} from './types';
+import type { AnomalyReport, DailyReport, Device } from './types';
 //Devices API Service
 // This service provides functions to interact with the devices API.
 
-export function getDevices(): Promise<Device>{
-    return axios.get('http://localhost8000/api/devices')
-        .then(response => response.data)
-        .catch(error => {
-            console.error('Error fetching devices:', error);
-            throw error;
-        });
+export function getDevices(): Promise<Device[]> {
+  return axios.get('http://localhost:8080/api/devices')
+    .then(response => response.data)
+    .catch(error => {
+      console.error('Error fetching devices:', error);
+      throw error;
+    });
 }
 
+
 export function getDeviceById(deviceId: string): Promise<Device> {
-    return axios.get(`http://localhost:8000/api/devices/${deviceId}`)
+    return axios.get(`http://localhost:8080/api/devices/${deviceId}`)
         .then(response => response.data)
         .catch(error => {
             console.error(`Error fetching device with ID ${deviceId}:`, error);
@@ -23,7 +23,7 @@ export function getDeviceById(deviceId: string): Promise<Device> {
 }
 
 export function createDevice(device: Device): Promise<Device> {
-    return axios.post('http://localhost:8000/api/devices', device)
+    return axios.post('http://localhost:8080/api/devices', device)
         .then(response => response.data)
         .catch(error => {
             console.error('Error creating device:', error);
@@ -32,7 +32,7 @@ export function createDevice(device: Device): Promise<Device> {
 }
 
 export function updateDevice(deviceId: string, device: Device): Promise<Device> {
-    return axios.put(`http://localhost:8000/api/devices/${deviceId}`, device)
+    return axios.put(`http://localhost:8080/api/devices/${deviceId}`, device)
         .then(response => response.data)
         .catch(error => {
             console.error(`Error updating device with ID ${deviceId}:`, error);
@@ -41,39 +41,47 @@ export function updateDevice(deviceId: string, device: Device): Promise<Device> 
 }
 
 export function deleteDevice(deviceId: string): Promise<void> {
-    return axios.delete(`http://localhost:8000/api/devices/${deviceId}`)
+    return axios.delete(`http://localhost:8080/api/devices/${deviceId}`)
         .then(() => {})
-        .catch(error => {
+        .catch((error) => {
             console.error(`Error deleting device with ID ${deviceId}:`, error);
             throw error;
         });
 }
 
 //Anomalies Reports Implementation
-export function getDailyReport(deviceId: string, date: string): Promise<Anomaly[]> {
-    return axios.get(`http://localhost:8000/api/reports/anomalies/daily/{${deviceId}}`, {
-        params: { date }
+export function getDailyReport(
+  deviceId: string,
+  date: string
+): Promise<DailyReport> {
+  return axios
+    .get(`http://localhost:8080/api/reports/daily/${deviceId}`, {
+      params: { date },
     })
-        .then(response => response.data)
-        .catch(error => {
-            console.error(`Error fetching daily report for device ${deviceId} on ${date}:`, error);
-            throw error;
-        });
+    .then((res) => res.data)
 }
 
-export function getAnomalyReport(deviceId: string, startDate: string, endDate: string): Promise<Anomaly[]> {
-    return axios.get(`http://localhost:8000/api/reports/anomalies/{${deviceId}}`, {
-        params: {from: startDate,to: endDate }
+
+export function getAnomalyReport(
+  deviceId: string,
+  startDate: string,
+  endDate: string
+): Promise<AnomalyReport> { // <-- esto es lo importante
+  return axios
+    .get(`http://localhost:8080/api/reports/anomalies`, {
+      params: { deviceId, from: startDate, to: endDate },
     })
-        .then(response => response.data)
-        .catch(error => {
-            console.error(`Error fetching anomaly report for device ${deviceId} from ${startDate} to ${endDate}:`, error);
-            throw error;
-        });
+    .then((response) => response.data)
+    .catch((error) => {
+      console.error(`Error fetching anomaly report for device ${deviceId}:`, error)
+      throw error
+    })
 }
+
+
 
 export function getDeviceKpis(deviceId :string, startDate: string, endDate: string): Promise<any> {
-    return axios.get(`http://localhost:8000/api/reports/kpis/{${deviceId}}`, {
+    return axios.get(`http://localhost:8080/api/reports/kpis/${deviceId}`, {
         params: { from: startDate, to: endDate }
     })
         .then(response => response.data)
@@ -84,7 +92,7 @@ export function getDeviceKpis(deviceId :string, startDate: string, endDate: stri
 }
 
 export function exportToCsv(deviceId: string, startDate: string, endDate: string): Promise<string> {
-    return axios.get(`http://localhost:8000/api/reports/export/csv/`, {
+    return axios.get(`http://localhost:8080/api/reports/export/csv`, {
         params: { deviceId, from: startDate, to : endDate },
         responseType: 'blob'
     })
@@ -102,3 +110,4 @@ export function exportToCsv(deviceId: string, startDate: string, endDate: string
             throw error;
         });
 }
+
