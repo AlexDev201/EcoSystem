@@ -18,7 +18,7 @@ public class AlertNotification {
     private String message;
     private Object data;
     private LocalDateTime timestamp;
-    private String severity; // NEW: Severity level of the alert (e.g., LOW, MEDIUM, HIGH)
+    private String severity;
 
     public enum AlertType {
         ANOMALY("Anomaly Detected"),
