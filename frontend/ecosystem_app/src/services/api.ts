@@ -66,7 +66,7 @@ export function getAnomalyReport(
   deviceId: string,
   startDate: string,
   endDate: string
-): Promise<AnomalyReport> { // <-- esto es lo importante
+): Promise<AnomalyReport> { // <-- Esta promesa es primordial 
   return axios
     .get(`http://localhost:8080/api/reports/anomalies`, {
       params: { deviceId, from: startDate, to: endDate },
