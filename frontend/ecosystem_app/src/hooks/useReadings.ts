@@ -10,51 +10,98 @@ export function useReadings() {
   const [readings, setReadings] = useState<ReadingsMap>({});
   const [latestReading, setLatestReading] = useState<LatestMap>({});
   const subscriptions = useRef<Record<string, () => void>>({});
+  // mapa opcional para recordar deviceId original cuando nos suscriben por otra clave
+  const subKeyToDeviceId = useRef<Record<string, string>>({});
 
-  // Asegurarse de que el cliente STOMP esté conectado
   useEffect(() => {
-    webSocketService.connect();
+    // Intentar conectar (idempotente si connect maneja reconexión internamente)
+    try {
+      webSocketService.connect();
+    } catch (e) {
+      console.warn('webSocketService.connect() falló:', e);
+    }
 
-    // Limpieza al desmontar el hook
     return () => {
-      Object.values(subscriptions.current).forEach(unsubscribe => unsubscribe());
+      // limpiar suscripciones al desmontar
+      Object.values(subscriptions.current).forEach(unsub => {
+        try { unsub(); } catch (err) { console.warn('unsubscribe error', err); }
+      });
       subscriptions.current = {};
-      // Opcional: desconectar si ningún otro componente lo usa
-      // webSocketService.disconnect(); 
+      subKeyToDeviceId.current = {};
+      // opcional: webSocketService.disconnect();
     };
   }, []);
 
-  const subscribeToDevice = useCallback((deviceId: string) => {
-    // Evitar doble suscripción
-    if (subscriptions.current[deviceId]) {
+  const subscribeToDevice = useCallback((subscriptionKey: string, deviceId?: string) => {
+    if (!subscriptionKey) {
+      console.warn('subscribeToDevice: subscriptionKey vacío', { deviceId });
+      return;
+    }
+    if (subscriptions.current[subscriptionKey]) {
+      // ya suscrito
       return;
     }
 
-    const topic = `/topic/energy-data/${deviceId}`;
-    
-    const unsubscribe = webSocketService.subscribe<Reading>(topic, (newReading) => {
-      if (newReading && newReading.deviceId) {
-        setReadings((prev) => ({
-          ...prev,
-          [newReading.deviceId]: [...(prev[newReading.deviceId] || []), newReading].slice(-50), // Mantener solo las últimas 50 lecturas
-        }));
+    const topic = `/topic/energy-data/${subscriptionKey}`;
+    if (deviceId) subKeyToDeviceId.current[subscriptionKey] = deviceId;
 
-        setLatestReading((prev) => ({
-          ...prev,
-          [newReading.deviceId]: newReading,
-        }));
+    console.info('WS subscribing', { subscriptionKey, topic, deviceId });
+
+    const unsubscribe = webSocketService.subscribe<Reading>(topic, (newReading) => {
+      // DEBUG: mostrar lo que llega
+      console.debug('WS incoming', {
+        subscriptionKey,
+        mappedDeviceId: subKeyToDeviceId.current[subscriptionKey],
+        newReading
+      });
+
+      if (!newReading || typeof newReading !== 'object') {
+        console.warn('WS payload inválido', { subscriptionKey, newReading });
+        return;
       }
+
+      // Construir conjunto de claves donde guardaremos la lectura
+      const keys = new Set<string>();
+      keys.add(subscriptionKey);
+      if (deviceId) keys.add(deviceId);
+      const payloadDeviceId = (newReading as any).deviceId;
+      const ubidotsLabel = (newReading as any).ubidotsLabel;
+      if (payloadDeviceId) keys.add(payloadDeviceId);
+      if (ubidotsLabel) keys.add(ubidotsLabel);
+
+      const keysArray = Array.from(keys);
+      console.debug('WS storing under keys', { keys: keysArray });
+
+      // Actualizar readings y latestReading en bloque (una única actualización por mapa)
+      setReadings(prev => {
+        const next = { ...prev };
+        keysArray.forEach(key => {
+          const arr = [...(next[key] || []), newReading].slice(-50); // keep last 50
+          next[key] = arr;
+        });
+        return next;
+      });
+
+      setLatestReading(prev => {
+        const next = { ...prev };
+        keysArray.forEach(key => {
+          next[key] = newReading;
+        });
+        return next;
+      });
     });
 
-    // Guardar la función de desuscripción
-    subscriptions.current[deviceId] = unsubscribe;
+    subscriptions.current[subscriptionKey] = unsubscribe;
   }, []);
 
-  const unsubscribeFromDevice = useCallback((deviceId: string) => {
-    const unsubscribe = subscriptions.current[deviceId];
+  const unsubscribeFromDevice = useCallback((subscriptionKey: string) => {
+    const unsubscribe = subscriptions.current[subscriptionKey];
     if (unsubscribe) {
-      unsubscribe();
-      delete subscriptions.current[deviceId];
+      try { unsubscribe(); } catch (e) { console.warn('unsubscribe error', e); }
+      delete subscriptions.current[subscriptionKey];
+    }
+    if (subKeyToDeviceId.current[subscriptionKey]) {
+      delete subKeyToDeviceId.current[subscriptionKey];
     }
   }, []);
 
@@ -63,6 +110,6 @@ export function useReadings() {
     latestReading,
     subscribeToDevice,
     unsubscribeFromDevice,
-    isConnected: webSocketService.stompClient.active, // Exponer estado de conexión
+    isConnected: Boolean(webSocketService?.stompClient?.active),
   };
 }

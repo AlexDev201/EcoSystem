@@ -22,15 +22,19 @@ export const DeviceList = () => {
   }, [])
 
   useEffect(() => {
-    // Suscribirse a lecturas de todos los dispositivos
-    devices.forEach(device => {
-      subscribeToDevice(device.id || "")
-    })
-  }, [devices, subscribeToDevice])
+  devices.forEach(device => {
+    const subscriptionKey = device.ubidotsLabel || device.id || "";
+    // pasamos device.id para que useReadings pueda también indexar bajo device.id
+    subscribeToDevice(subscriptionKey, device.id || undefined);
+  });
+}, [devices, subscribeToDevice]);
 
   const filteredDevices = devices.filter(device => {
+    // Por esta corrección:
     const matchesSearch = device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         device.location || " ".toLowerCase().includes(searchTerm.toLowerCase())
+                     (device.location || "").toLowerCase().includes(searchTerm.toLowerCase())
+
+   
     const matchesStatus = statusFilter === "ALL" || device.status === statusFilter
     return matchesSearch && matchesStatus
   })
