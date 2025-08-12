@@ -74,7 +74,7 @@ class WebSocketService {
       console.log('Disconnecting WebSocket...');
       this.isConnecting = false;
       this.isConnected = false;
-      this.connectionSubscribers = []; // Limpiar callbacks pendientes
+      this.connectionSubscribers = []; // Limpiamos callbacks pendientes
       this.stompClient.deactivate();
     }
   }
